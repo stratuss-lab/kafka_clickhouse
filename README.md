@@ -86,13 +86,13 @@ ORDER BY timestamp;
 
 ## Running
 
-**Terminal 1 — Start the consumer:**
+**Terminal 1 - Start the consumer:**
 
 ```bash
 npx tsx kafka/consumer.ts
 ```
 
-**Terminal 2 — Publish an event:**
+**Terminal 2 - Publish an event:**
 
 ```bash
 npx tsx kafka/producer.ts
