@@ -1,4 +1,8 @@
 import { Kafka } from "kafkajs";
+import { createClient } from "@clickhouse/client";
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 const kafka = new Kafka({
   clientId: "dummy-event-consumer",
@@ -7,6 +11,12 @@ const kafka = new Kafka({
 
 const consumer = kafka.consumer({
   groupId: "dummy-event-consumer-group",
+});
+
+const clickhouse = createClient({
+  url: process.env.CLICKHOUSE_HOST,
+  username: process.env.CLICKHOUSE_USER,
+  password: process.env.CLICKHOUSE_PASSWORD,
 });
 
 async function main() {
@@ -22,9 +32,18 @@ async function main() {
   await consumer.run({
     eachMessage: async ({ topic, partition, message }) => {
       const value = message.value?.toString();
+      if (!value) return;
 
-      console.log("Received event:");
-      console.log(value);
+      const event = JSON.parse(value);
+      console.log("Received event:", event);
+
+      await clickhouse.insert({
+        table: "events",
+        values: [event],
+        format: "JSONEachRow",
+      });
+
+      console.log("Inserted into ClickHouse:", event);
     },
   });
 }
